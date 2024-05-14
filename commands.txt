@@ -1,3 +1,7 @@
+#aws
+secret access key: l2ILdvtMxvzF1M6zao9iLUTZWK6qXi2dFP9INCZv
+access key: AKIATCKASLYSZAOTML6W
+
 # connect to EC2
 ssh -i snowflake-project.pem ec2-user@ec2-54-203-235-65.us-west-2.compute.amazonaws.com
 
