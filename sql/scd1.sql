@@ -21,12 +21,11 @@ when matched and c.customer_id <> cr.customer_id or
 when not matched then insert
            (c.customer_id,c.first_name,c.last_name,c.email,c.street,c.city,c.state,c.country)
     values (cr.customer_id,cr.first_name,cr.last_name,cr.email,cr.street,cr.city,cr.state,cr.country);
-    
 
 
-CREATE OR REPLACE PROCEDURE pdr_scd_demo()
+CREATE OR REPLACE PROCEDURE pdr_scd()
 returns string not null
-language javascript
+language javascript  -- snowflake only supports javascript in stored procedures
 as
     $$
       var cmd = `
@@ -61,7 +60,7 @@ as
       var result1 = sql1.execute();
     return cmd+'\n'+cmd1;
     $$;
-call pdr_scd_demo();
+call pdr_scd();
 
 
 --Set up TASKADMIN role
@@ -75,16 +74,15 @@ grant execute task on account to role taskadmin;
 use role securityadmin;
 grant role taskadmin to role sysadmin;
 
+use role accountadmin
 create or replace task tsk_scd_raw warehouse = COMPUTE_WH schedule = '1 minute'
 ERROR_ON_NONDETERMINISTIC_MERGE=FALSE
 as
-call pdr_scd_demo();
+call pdr_scd();
+
 show tasks;
 alter task tsk_scd_raw suspend;--resume --suspend
 show tasks;
 
 select timestampdiff(second, current_timestamp, scheduled_time) as next_run, scheduled_time, current_timestamp, name, state 
 from table(information_schema.task_history()) where state = 'SCHEDULED' order by completed_time desc;
-
-
-select * from customer where customer_id=0;
