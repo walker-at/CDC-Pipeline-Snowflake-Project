@@ -1,4 +1,4 @@
-# Snowflake-DE-Project
+# Snowflake DE Project
 Deployed Apache NiFi onto an EC2 instance using docker
 
 generate test data with python code, to simulate real-time data streaming in action. most api's for real time data are paid. the library faker we use for random data. whenever data is generated it is uploaded to amazon s3 using APache NiFi
