@@ -1,8 +1,19 @@
-# Data Streaming into Snowflake Project
+# CDC Pipeline in Snowflake Project
+
+This pipeline simulates the real-time ingestion of streaming data. The pipeline is fed data generated within a jupyter notebook, processes and routes it with Apache NiFi to an Amazon S3 bucket, and loads it into a staging table in Snowflake. Once in Snowflake, we have 2 target tables to send our data to.
+
+Some data teams need to have their data near real-time for dashboards and reporting. 
+
 Deployed Apache NiFi onto an EC2 instance using docker
 
 generate test data with python code, to simulate real-time data streaming in action. most api's for real time data are paid. the library faker we use for random data. whenever data is generated it is uploaded to amazon s3 using APache NiFi
 configured a snowpipe to trigger whenevr a new file is added to the s3 bucket
+
+python code runs & data gets stored on EC2 machine -> Apache NiFi will reroute the data to an Amazon S3 bucket -> Snowpipe is triggered to load this data onto the staging table, storing the raw data as it is -> (CDC) A Snowflake Stream tracking any changes in our staging table is wrapped in a Snowflake Task in order to automate the stream at 1min intervals, inserting new data and updating old data in our first target table (SCD 1), keeping track of historical records (SCD 2)
+
+first table - staging/raw
+second - actual, don't want to load duplicate data, only process changed data (CDC), think of it as the filtered up to date table, scd1 (replace data, no history)
+third - historical, scd2
 
 # Project Tools
 Raw Data Generation
