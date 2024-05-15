@@ -18,7 +18,7 @@ ETL
   * Snowflake Stream & Task - to automate our pipeline in order to simulate the handling of a continous data flow.
 
 # Workflow
-python code runs & data gets stored on EC2 machine -> Apache NiFi will reroute the data to an Amazon S3 bucket -> Snowpipe is triggered to load this data onto the staging table -> (CDC) A Snowflake Stream wrapped in a Snowflake Task -> inserting new data and updating old data in our first target table (SCD 1), keeping track of historical records in our second target table (SCD 2)
+Python code runs & data gets stored on EC2 machine -> Apache NiFi will reroute the data to an Amazon S3 bucket -> Snowpipe is triggered to load this data onto the staging table -> (CDC) A Snowflake Stream wrapped in a Snowflake Task -> inserting new data and updating old data in our first target table (SCD 1), keeping track of historical records in our second target table (SCD 2)
 
 # Apache NiFi
 Apache nifi is a web-based interface for designing and monitoring data flows. I chose NiFi over airflow because this project is simulating a continuous data flow and so deals with stream processing. The first screenshot below is the process group for this project.
