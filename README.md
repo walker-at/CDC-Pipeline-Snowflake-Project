@@ -1,9 +1,22 @@
-# Snowflake DE Project
+# Data Streaming into Snowflake Project
 Deployed Apache NiFi onto an EC2 instance using docker
 
 generate test data with python code, to simulate real-time data streaming in action. most api's for real time data are paid. the library faker we use for random data. whenever data is generated it is uploaded to amazon s3 using APache NiFi
 configured a snowpipe to trigger whenevr a new file is added to the s3 bucket
 
+# Project Tools
+Raw Data Generation
+  * Python, specifically the faker library
+
+Cloud
+  * AWS EC2 instance & Amazon S3 bucket
+
+ETL
+  * Apache NiFi to push generated data into our S3 bucket
+  * Snowpipe for integration from S3 into Snowflake
+  * Snowflake Stream & Task to automate our pipeline in order to simulate the handling of a continous data flow.
+
+# Workflow
 python code runs & data gets stored on EC2 machine -> Apache NiFi will reroute the data to an Amazon S3 bucket -> Snowpipe is triggered to load this data onto the staging table, storing the raw data as it is -> (CDC) A Snowflake Stream tracking any changes in our staging table is wrapped in a Snowflake Task in order to automate the stream at 1min intervals, inserting new data and updating old data in our first target table (SCD 1), keeping track of historical records (SCD 2)
 
 first table - staging/raw
