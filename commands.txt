@@ -1,5 +1,5 @@
 #aws
-secret access key: l2ILdvtMxvzF1M6zao9iLUTZWK6qXi2dFP9INCZv
+secret access key: xxx
 access key: AKIATCKASLYSZAOTML6W
 
 # connect to EC2
