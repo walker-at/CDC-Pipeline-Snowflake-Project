@@ -1,26 +1,31 @@
 show streams;
 select * from customer_table_changes;
 
+-- try introducing chnages to the data to test the pipeline
 insert into customer values(223136,'Jessica','Arnold','tanner39@smith.com','595 Benjamin Forge Suite 124','Michaelstad','Connecticut'
                             ,'Cape Verde',current_timestamp());
 update customer set FIRST_NAME='Jessica', update_timestamp = current_timestamp()::timestamp_ntz where customer_id=72;
-delete from customer where customer_id =73 ;
+delete from customer where customer_id =73;
 
 select * from customer_history where customer_id in (72,73,223136);
 select * from customer_table_changes;
 select * from  customer where customer_id in (72,73,223136);
 
 
---View Creation--
+/* 
+a view that orchestrates the generation and maintenance of historical records
+in response to insertion, update, or deletion operations in the customer table
+*/
+
 create or replace view v_customer_change_data as
--- This subquery figures out what to do when data is inserted into the customer table
--- An insert to the customer table results in an INSERT to the customer_HISTORY table
-select CUSTOMER_ID, FIRST_NAME, LAST_NAME, EMAIL, STREET, CITY,STATE,COUNTRY,
- start_time, end_time, is_current, 'I' as dml_type
+-- This portion is for when data is inserted
+-- An insert to the customer table results in an INSERT to the customer_history table
+select CUSTOMER_ID, FIRST_NAME, LAST_NAME, EMAIL, STREET, CITY, STATE, COUNTRY,
+             start_time, end_time, is_current, 'I' as dml_type  -- 'I' as dml_type indicates these records are a result of data insertion.
 from (
-select CUSTOMER_ID, FIRST_NAME, LAST_NAME, EMAIL, STREET, CITY,STATE,COUNTRY,
-             update_timestamp as start_time,
-             lag(update_timestamp) over (partition by customer_id order by update_timestamp desc) as end_time_raw,
+select CUSTOMER_ID, FIRST_NAME, LAST_NAME, EMAIL, STREET, CITY, STATE, COUNTRY,
+             update_timestamp as start_time,  -- this is from the customer_table_changes table
+             lag(update_timestamp) over (partition by customer_id order by update_timestamp desc) as end_time_raw,  -- gets the previous update_timestamp for each customer_id to determine whether this record is current.
              case when end_time_raw is null then '9999-12-31'::timestamp_ntz else end_time_raw end as end_time,
              case when end_time_raw is null then TRUE else FALSE end as is_current
       from (select CUSTOMER_ID, FIRST_NAME, LAST_NAME, EMAIL, STREET, CITY,STATE,COUNTRY,UPDATE_TIMESTAMP
@@ -29,24 +34,24 @@ select CUSTOMER_ID, FIRST_NAME, LAST_NAME, EMAIL, STREET, CITY,STATE,COUNTRY,
             and metadata$isupdate = 'FALSE')
   )
 union
--- This subquery figures out what to do when data is updated in the customer table
--- An update to the customer table results in an update AND an insert to the customer_HISTORY table
+-- This portion is for when data is updated
+-- An update to the customer table results in an update AND an insert to the customer_history table
 -- The subquery below generates two records, each with a different dml_type
-select CUSTOMER_ID, FIRST_NAME, LAST_NAME, EMAIL, STREET, CITY,STATE,COUNTRY, start_time, end_time, is_current, dml_type
-from (select CUSTOMER_ID, FIRST_NAME, LAST_NAME, EMAIL, STREET, CITY,STATE,COUNTRY,
+select CUSTOMER_ID, FIRST_NAME, LAST_NAME, EMAIL, STREET, CITY, STATE, COUNTRY, start_time, end_time, is_current, dml_type
+from (select CUSTOMER_ID, FIRST_NAME, LAST_NAME, EMAIL, STREET, CITY, STATE, COUNTRY,
              update_timestamp as start_time,
              lag(update_timestamp) over (partition by customer_id order by update_timestamp desc) as end_time_raw,
              case when end_time_raw is null then '9999-12-31'::timestamp_ntz else end_time_raw end as end_time,
              case when end_time_raw is null then TRUE else FALSE end as is_current, 
              dml_type
       from (-- Identify data to insert into customer_history table
-            select CUSTOMER_ID, FIRST_NAME, LAST_NAME, EMAIL, STREET, CITY,STATE,COUNTRY, update_timestamp, 'I' as dml_type
+            select CUSTOMER_ID, FIRST_NAME, LAST_NAME, EMAIL, STREET, CITY, STATE, COUNTRY, update_timestamp, 'I' as dml_type
             from customer_table_changes
             where metadata$action = 'INSERT'
             and metadata$isupdate = 'TRUE'
             union
-            -- Identify data in customer_HISTORY table that needs to be updated
-            select CUSTOMER_ID, null, null, null, null, null,null,null, start_time, 'U' as dml_type
+            -- Identify data in customer_history table that needs to be updated
+            select CUSTOMER_ID, null, null, null, null, null, null, null, start_time, 'U' as dml_type
             from customer_history
             where customer_id in (select distinct customer_id 
                                   from customer_table_changes
@@ -54,9 +59,9 @@ from (select CUSTOMER_ID, FIRST_NAME, LAST_NAME, EMAIL, STREET, CITY,STATE,COUNT
                                   and metadata$isupdate = 'TRUE')
      and is_current = TRUE))
 union
--- This subquery figures out what to do when data is deleted from the customer table
+-- This is for when data is deleted
 -- A deletion from the customer table results in an update to the customer_HISTORY table
-select ctc.CUSTOMER_ID, null, null, null, null, null,null,null, ch.start_time, current_timestamp()::timestamp_ntz, null, 'D'
+select ctc.CUSTOMER_ID, null, null, null, null, null, null, null, ch.start_time, current_timestamp()::timestamp_ntz, null, 'D'
 from customer_history ch
 inner join customer_table_changes ctc
    on ch.customer_id = ctc.customer_id
@@ -70,7 +75,7 @@ create or replace task tsk_scd_hist warehouse= COMPUTE_WH schedule='1 minute'
 ERROR_ON_NONDETERMINISTIC_MERGE=FALSE
 as
 merge into customer_history ch -- Target table to merge changes from NATION into
-using v_customer_change_data ccd -- v_customer_change_data is a view that holds the logic that determines what to insert/update into the customer_history table.
+using v_customer_change_data ccd -- v_customer_change_data provides the rules for determining what to insert/update into the customer_history table.
    on ch.CUSTOMER_ID = ccd.CUSTOMER_ID -- CUSTOMER_ID and start_time determine whether there is a unique record in the customer_history table
    and ch.start_time = ccd.start_time
 when matched and ccd.dml_type = 'U' then update -- Indicates the record has been updated and is no longer current and the end_time needs to be stamped
@@ -87,7 +92,9 @@ show tasks;
 alter task tsk_scd_hist suspend;--resume --suspend
 
 
-
+/*
+messing with the data to test our created task
+*/
 insert into customer values(223136,'Jessica','Arnold','tanner39@smith.com','595 Benjamin Forge Suite 124','Michaelstad','Connecticut'
                             ,'Cape Verde',current_timestamp());
 update customer set FIRST_NAME='Jessica' where customer_id=7523;
@@ -96,7 +103,7 @@ select count(*),customer_id from customer group by customer_id having count(*)=1
 select * from customer_history where customer_id =223136;
 select * from customer_history where IS_CURRENT=TRUE;
 
---alter warehouse suspend;
+--check task status
 select timestampdiff(second, current_timestamp, scheduled_time) as next_run, scheduled_time, current_timestamp, name, state 
 from table(information_schema.task_history()) where state = 'SCHEDULED' order by completed_time desc;
 
