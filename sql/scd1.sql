@@ -81,7 +81,7 @@ as
 call pdr_scd();
 
 show tasks;
-alter task tsk_scd_raw suspend;--resume --suspend
+alter task tsk_scd_raw suspend;--resume or suspend
 show tasks;
 
 select timestampdiff(second, current_timestamp, scheduled_time) as next_run, scheduled_time, current_timestamp, name, state 
