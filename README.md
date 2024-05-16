@@ -9,7 +9,7 @@ Raw Data Generation
   * Python - specifically the faker library
 
 Cloud
-  * AWS EC2 instance - I deployed Apache NiFi onto an EC2 instance using docker
+  * AWS EC2 instance - to deploy Apache NiFi onto an EC2 instance using docker
   * Amazon S3 bucket - receives data from Apache NiFi for ingestion by snowpipe
 
 ETL
