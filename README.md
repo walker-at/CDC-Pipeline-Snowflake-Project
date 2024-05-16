@@ -9,14 +9,14 @@ Raw Data Generation
   * Python - specifically the faker library
 
 Cloud
-  * AWS EC2 instance - to deploy Apache NiFi onto an EC2 instance using docker
-  * Amazon S3 bucket - receives data from Apache NiFi for ingestion by snowpipe
+  * AWS EC2 instance - Within the EC2 instance, a Docker container was created and populated with Python, Apache Nifi, and Apache ZooKeeper
+  * Amazon S3 bucket - to receive data from Apache NiFi for ingestion by snowpipe
 
 ETL
   * Apache NiFi - to push generated data into our S3 bucket
   * Snowpipe - for integration from S3 into Snowflake (triggers whenever a new file is added to the S3 bucket)
-  * Snowflake Stream & Task - to automate our pipeline in order to simulate the handling of a continous data flow.
-
+  * Snowflake Stream & Task - to handle real-time data streaming by automatically updating our target tables as new data arrives via Snowpipe
+    
 # Workflow
 Python code runs & data gets stored on EC2 machine -> Apache NiFi will reroute the data to an Amazon S3 bucket -> Snowpipe is triggered to load this data onto the staging table -> (CDC) A Snowflake Stream wrapped in a Snowflake Task -> inserting new data and updating old data in our first target table (SCD 1), keeping track of historical records in our second target table (SCD 2)
 
