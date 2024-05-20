@@ -25,7 +25,7 @@ when not matched then insert
 
 CREATE OR REPLACE PROCEDURE pdr_scd()
 returns string not null
-language javascript  -- snowflake only supports javascript in stored procedures
+language javascript  
 as
     $$
       var cmd = `
