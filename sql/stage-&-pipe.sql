@@ -1,6 +1,6 @@
 CREATE OR REPLACE STAGE SCD_DEMO.SCD2.customer_ext_stage
     url='s3://bucket123me/stream_data'
-    credentials=(aws_key_id='AKIATCKASLYSZAOTML6W' aws_secret_key='l2ILdvtMxvzF1M6zao9iLUTZWK6qXi2dFP9INCZv');
+    credentials=(aws_key_id='***' aws_secret_key='***');
    
 
 CREATE OR REPLACE FILE FORMAT SCD_DEMO.SCD2.CSV
