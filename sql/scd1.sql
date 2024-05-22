@@ -22,7 +22,7 @@ when not matched then insert
            (c.customer_id,c.first_name,c.last_name,c.email,c.street,c.city,c.state,c.country)
     values (cr.customer_id,cr.first_name,cr.last_name,cr.email,cr.street,cr.city,cr.state,cr.country);
 
-
+-- put our merge statement into a stored procedure
 CREATE OR REPLACE PROCEDURE pdr_scd()
 returns string not null
 language javascript  
@@ -53,7 +53,7 @@ as
                             (c.customer_id,c.first_name,c.last_name,c.email,c.street,c.city,c.state,c.country)
                      values (cr.customer_id,cr.first_name,cr.last_name,cr.email,cr.street,cr.city,cr.state,cr.country);
       `
-      var cmd1 = "truncate table SCD_DEMO.SCD2.customer_raw;"
+      var cmd1 = "truncate table SCD_DEMO.SCD2.customer_raw;" -- after the merge runs we want to clear out the raw table
       var sql = snowflake.createStatement({sqlText: cmd});
       var sql1 = snowflake.createStatement({sqlText: cmd1});
       var result = sql.execute();
